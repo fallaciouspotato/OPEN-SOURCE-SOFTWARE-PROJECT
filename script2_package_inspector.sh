@@ -1,0 +1,120 @@
+#!/bin/bash
+# ============================================================
+# Script 2: FOSS Package Inspector
+# Course: Open Source Software | Chosen Software: Linux Kernel
+# What it does: Checks if a package is installed, shows info,
+#               and prints a philosophy note using case
+# Concepts used: if-then-else, case statement, dpkg/rpm, grep
+# ============================================================
+
+# --- The package to inspect (change based on your system) ---
+# On Debian/Ubuntu systems use: linux-image-$(uname -r)
+# On RHEL/CentOS systems use: kernel
+PACKAGE="linux-image-$(uname -r)"
+
+echo ""
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║            FOSS PACKAGE INSPECTOR                    ║"
+echo "╚══════════════════════════════════════════════════════╝"
+echo ""
+echo "  Inspecting package: $PACKAGE"
+echo "──────────────────────────────────────────────────────"
+
+# --- Check if we're on a Debian or RPM based system ---
+# This makes the script work on both Ubuntu and CentOS/Fedora
+if command -v dpkg &>/dev/null; then
+    # Debian/Ubuntu system — use dpkg to check
+    SYSTEM_TYPE="debian"
+elif command -v rpm &>/dev/null; then
+    # RPM-based system (Fedora, CentOS, RHEL) — use rpm
+    SYSTEM_TYPE="rpm"
+    PACKAGE="kernel"  # RPM systems use 'kernel' as the package name
+else
+    echo "  Could not detect package manager. Exiting."
+    exit 1
+fi
+
+# --- Check if the package is installed ---
+if [ "$SYSTEM_TYPE" = "debian" ]; then
+    # dpkg -l lists installed packages; grep checks if ours is there
+    if dpkg -l "$PACKAGE" &>/dev/null; then
+        INSTALLED=true
+        VERSION=$(dpkg -l "$PACKAGE" 2>/dev/null | grep "^ii" | awk '{print $3}')
+        DESCRIPTION=$(dpkg -l "$PACKAGE" 2>/dev/null | grep "^ii" | awk '{$1=$2=$3=$4=""; print $0}' | xargs)
+    else
+        INSTALLED=false
+    fi
+else
+    # rpm -q checks if a package is installed by name
+    if rpm -q "$PACKAGE" &>/dev/null; then
+        INSTALLED=true
+        VERSION=$(rpm -qi "$PACKAGE" 2>/dev/null | grep "^Version" | awk '{print $3}')
+        DESCRIPTION=$(rpm -qi "$PACKAGE" 2>/dev/null | grep "^Summary" | cut -d: -f2 | xargs)
+    else
+        INSTALLED=false
+    fi
+fi
+
+# --- Print result based on whether it's installed ---
+if [ "$INSTALLED" = true ]; then
+    echo "  Status      : ✔ Installed"
+    echo "  Version     : $VERSION"
+    echo "  Description : $DESCRIPTION"
+    echo ""
+    echo "  Current running kernel : $(uname -r)"
+    echo "  Architecture           : $(uname -m)"
+else
+    echo "  Status : ✘ Package '$PACKAGE' not found on this system."
+    echo "  Tip    : Try running: sudo apt install linux-image-generic"
+fi
+
+echo ""
+echo "──────────────────────────────────────────────────────"
+echo "  OPEN SOURCE PHILOSOPHY NOTE"
+echo "──────────────────────────────────────────────────────"
+
+# --- Case statement: print a philosophy note based on software name ---
+# We strip version numbers to get a clean base name for matching
+BASE=$(echo "$PACKAGE" | sed 's/-[0-9].*//' | tr '[:upper:]' '[:lower:]')
+
+case $BASE in
+    linux*|kernel*)
+        echo "  Linux: The kernel that proved a student with a modem"
+        echo "  and a mailing list could outbuild a corporation."
+        echo "  Today it runs 100% of the world's top supercomputers."
+        ;;
+    apache*|httpd*)
+        echo "  Apache: The web server that held up the early internet"
+        echo "  when it had no reason to — because volunteers cared."
+        ;;
+    mysql*|mariadb*)
+        echo "  MySQL: A reminder that open source and commerce can"
+        echo "  coexist — and sometimes fork when they can't."
+        ;;
+    firefox*)
+        echo "  Firefox: A nonprofit's answer to corporate browser"
+        echo "  monopoly. Still fighting for an open web."
+        ;;
+    git*)
+        echo "  Git: Linus built this in two weeks after a proprietary"
+        echo "  tool betrayed him. It now runs all of software."
+        ;;
+    python*)
+        echo "  Python: Proof that a language shaped entirely by"
+        echo "  community consensus can become the world's most loved."
+        ;;
+    vlc*)
+        echo "  VLC: Born in a French university dorm, now plays"
+        echo "  literally every format ever invented. For free."
+        ;;
+    *)
+        echo "  Every open source tool carries someone's frustration"
+        echo "  turned into a gift. This one is no different."
+        ;;
+esac
+
+echo ""
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║                  End of Inspection                   ║"
+echo "╚══════════════════════════════════════════════════════╝"
+echo ""
