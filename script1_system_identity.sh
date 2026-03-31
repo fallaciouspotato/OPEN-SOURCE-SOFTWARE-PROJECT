@@ -6,7 +6,7 @@
 # Concepts used: variables, command substitution $(), echo
 # ============================================================
 
-# --- Student info (fill these in) ---
+# --- Student info ---
 STUDENT_NAME="Priyanshu Chourasiya"
 REG_NUMBER="24BCG10013"
 SOFTWARE="Linux Kernel"
